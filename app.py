@@ -2,15 +2,17 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-# إعداد واجهة التطبيق
 st.set_page_config(page_title="حاسبة السعرات الذكية", layout="centered")
 
-# جلب المفتاح من Secrets
+# محاولة جلب المفتاح وتفعيله
 try:
-    api_key = st.secrets["GOOGLE_API_KEY"]
-    genai.configure(api_key=api_key)
-except:
-    st.error("يرجى التأكد من وضع المفتاح في إعدادات Secrets")
+    if "GOOGLE_API_KEY" in st.secrets:
+        api_key = st.secrets["GOOGLE_API_KEY"]
+        genai.configure(api_key=api_key)
+    else:
+        st.error("يرجى وضع GOOGLE_API_KEY في إعدادات Secrets")
+except Exception as e:
+    st.error(f"خطأ في إعداد المفتاح: {e}")
 
 st.title("🍎 حاسبة السعرات الحرارية الذكية")
 st.write("ارفع صورة وجبتك لتحليلها فوراً")
@@ -22,15 +24,15 @@ if uploaded_file is not None:
     st.image(image, caption='الوجبة المرفوعة', use_container_width=True)
     
     if st.button("تحليل الوجبة"):
-        with st.spinner('انتظر قليلاً، يتم الآن تحليل وجبتك...'):
+        with st.spinner('يتم الآن تحليل الصورة...'):
             try:
-                model = genai.GenerativeModel('gemini-1.5-flash')
-                # تعديل السطر التالي لضمان عمل الصورة بشكل صحيح
+                # تم تعديل السطر بالأسفل لضمان عمل الموديل
+                model = genai.GenerativeModel('gemini-1.5-flash-latest') 
                 response = model.generate_content([
-                    "حلل هذه الصورة كخبير تغذية. أعطني السعرات الحرارية والبروتين لكل مكون، ثم أعطني نصيحة لزيادة الوزن.", 
+                    "حلل مكونات هذه الوجبة بدقة. أعطني قائمة بالمكونات، السعرات الحرارية، والبروتين. ثم قدم نصيحة لزيادة الوزن.", 
                     image
                 ])
-                st.success("نتائج التحليل:")
+                st.success("تم التحليل بنجاح:")
                 st.write(response.text)
             except Exception as e:
                 st.error(f"حدث خطأ أثناء التحليل: {e}")
