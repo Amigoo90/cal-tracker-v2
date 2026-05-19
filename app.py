@@ -20,7 +20,7 @@ if uploaded_file is not None:
     if st.button("تحليل الوجبة"):
         with st.spinner('جاري التحليل...'):
             try:
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-pro-vision')
                 response = model.generate_content(["حلل الصورة: اذكر المكونات، السعرات، والبروتين.", image])
                 st.success("النتيجة:")
                 st.write(response.text)
