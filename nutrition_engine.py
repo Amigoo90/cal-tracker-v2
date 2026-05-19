@@ -8,7 +8,15 @@ genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 def analyze_food_image(image_path):
     # تم تغيير اسم النموذج هنا ليصبح gemini-1.5-flash ليعمل بدون أخطاء
     # جرب هذا الاسم أولاً (الأكثر استقراراً)
-    model = genai.GenerativeModel('gemini-pro')
+    try:
+    # هذا السطر سيجبر التطبيق على استخدام أحدث نسخة من البروتوكول
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    response = model.generate_content(["تحقق من الصورة", image])
+    st.write(response.text)
+except Exception as e:
+    # إذا فشل، سيخبرنا "لماذا" بالضبط بدلاً من مجرد 404
+    st.error(f"تنبيه من جوجل: {e}")
+ 
     with open(image_path, "rb") as image_file:
         image_data = image_file.read()
 
