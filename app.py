@@ -1,36 +1,29 @@
 import streamlit as st
-from nutrition_engine import analyze_food_image, format_nutrition_result, calculate_tdee
-import os
+import google.generativeai as genai
+from PIL import Image
 
-# 確保 API Key 從 Streamlit secrets 讀取
-if "GOOGLE_API_KEY" in st.secrets:
-    os.environ["GOOGLE_API_KEY"] = st.secrets["GOOGLE_API_KEY"]
+# إعداد واجهة التطبيق
+st.set_page_config(page_title="حاسبة السعرات الذكية", layout="centered")
 
-st.title("🍽️ AI 智能營養師")
+# جلب المفتاح من Secrets
+try:
+    api_key = st.secrets["GOOGLE_API_KEY"]
+    genai.configure(api_key=api_key)
+except:
+    st.error("يرجى التأكد من وضع المفتاح في إعدادات Secrets")
 
-with st.sidebar:
-    st.header("用戶資料")
-    weight = st.number_input("體重 (kg)", 60.0)
-    height = st.number_input("身高 (cm)", 170.0)
-    age = st.number_input("年齡", 25)
-    gender = st.selectbox("性別", ['male', 'female'])
-    tdee = calculate_tdee(weight, height, age, gender)
-    st.write(f"每日熱量需求: {tdee:.0f} kcal")
+st.title("🍎 حاسبة السعرات الحرارية الذكية")
+st.write("ارفع صورة وجبتك لتحليلها فوراً")
 
-uploaded_file = st.file_uploader("上傳食物照片...", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("اختر صورة الوجبة...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    with open("temp_meal.jpg", "wb") as f:
-        f.write(uploaded_file.getbuffer())
+    image = Image.open(uploaded_file)
+    st.image(image, caption='الوجبة المرفوعة', use_container_width=True)
     
-    with st.spinner('正在分析食物...'):
-        try:
-            items = analyze_food_image("temp_meal.jpg")
-            result = format_nutrition_result(items)
-            
-            st.json(result)
-            total = result['total_calories']
-            st.write(f"### 總攝取: {total} kcal")
-            st.progress(min(total / tdee, 1.0))
-        except Exception as e:
-            st.error(f"分析失敗: {e}")
+    if st.button("تحليل الوجبة"):
+        with st.spinner('انتظر قليلاً...'):
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            response = model.generate_content(["حلل هذه الصورة وأعطني السعرات والبروتين لكل مكون.", image])
+            st.success("نتائج التحليل:")
+            st.write(response.text)
