@@ -22,8 +22,15 @@ if uploaded_file is not None:
     st.image(image, caption='الوجبة المرفوعة', use_container_width=True)
     
     if st.button("تحليل الوجبة"):
-        with st.spinner('انتظر قليلاً...'):
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            response = model.generate_content(["حلل هذه الصورة وأعطني السعرات والبروتين لكل مكون.", image])
-            st.success("نتائج التحليل:")
-            st.write(response.text)
+        with st.spinner('انتظر قليلاً، يتم الآن تحليل وجبتك...'):
+            try:
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                # تعديل السطر التالي لضمان عمل الصورة بشكل صحيح
+                response = model.generate_content([
+                    "حلل هذه الصورة كخبير تغذية. أعطني السعرات الحرارية والبروتين لكل مكون، ثم أعطني نصيحة لزيادة الوزن.", 
+                    image
+                ])
+                st.success("نتائج التحليل:")
+                st.write(response.text)
+            except Exception as e:
+                st.error(f"حدث خطأ أثناء التحليل: {e}")
