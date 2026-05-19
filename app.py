@@ -24,7 +24,8 @@ if uploaded_file is not None:
         with st.spinner('يتم الآن فحص الصورة واستخراج البيانات...'):
             try:
                 # استخدمنا الاسم الأكثر استقراراً للموديل
-                model = genai.GenerativeModel(model_name="gemini-1.5-flash")
+                model = genai.GenerativeModel('gemini-1.5-flash')
+
 
  
                 
