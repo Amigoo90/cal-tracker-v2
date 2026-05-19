@@ -1,29 +1,36 @@
 import streamlit as st
-import google.generativeai as genai
-from PIL import Image
+from nutrition_engine import analyze_food_image, format_nutrition_result, calculate_tdee
+import os
 
-st.set_page_config(page_title="حاسبة السعرات الذكية", layout="centered")
-
+# التأكد من قراءة مفتاح الـ API من إعدادات Streamlit
 if "GOOGLE_API_KEY" in st.secrets:
-    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-else:
-    st.error("المفتاح غير موجود في Secrets")
+    os.environ["GOOGLE_API_KEY"] = st.secrets["GOOGLE_API_KEY"]
 
-st.title("🍎 حاسبة السعرات")
+st.title("🍽️ AI 智能營養師")
 
-uploaded_file = st.file_uploader("ارفع صورة وجبتك...", type=["jpg", "jpeg", "png"])
+with st.sidebar:
+    st.header("用戶資料")
+    weight = st.number_input("體重 (kg)", 60.0)
+    height = st.number_input("身高 (cm)", 170.0)
+    age = st.number_input("年齡", 25)
+    gender = st.selectbox("性別", ['male', 'female'])
+    tdee = calculate_tdee(weight, height, age, gender)
+    st.write(f"每日熱量需求: {tdee:.0f} kcal")
+
+uploaded_file = st.file_uploader("上傳食物照片...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    image = Image.open(uploaded_file)
-    st.image(image, use_container_width=True)
+    with open("temp_meal.jpg", "wb") as f:
+        f.write(uploaded_file.getbuffer())
     
-    if st.button("تحليل الوجبة"):
-        with st.spinner('جاري التحليل...'):
-            try:
-                model = genai.GenerativeModel('gemini-pro-vision')
-                response = model.generate_content(["حلل الصورة: اذكر المكونات، السعرات، والبروتين.", image])
-                st.success("النتيجة:")
-                st.write(response.text)
-            except Exception as e:
-                st.error(f"خطأ: {e}")
-
+    with st.spinner('正在分析食物...'):
+        try:
+            items = analyze_food_image("temp_meal.jpg")
+            result = format_nutrition_result(items)
+            
+            st.json(result)
+            total = result['total_calories']
+            st.write(f"### 總攝取: {total} kcal")
+            st.progress(min(total / tdee, 1.0))
+        except Exception as e:
+            st.error(f"分析失敗: {e}")
