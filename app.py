@@ -27,7 +27,8 @@ if uploaded_file is not None:
         with st.spinner('يتم الآن تحليل الصورة...'):
             try:
                 # تم تعديل السطر بالأسفل لضمان عمل الموديل
-                model = genai.GenerativeModel('gemini-1.5-flash-latest') 
+                model = genai.GenerativeModel('gemini-1.5-flash')
+
                 response = model.generate_content([
                     "حلل مكونات هذه الوجبة بدقة. أعطني قائمة بالمكونات، السعرات الحرارية، والبروتين. ثم قدم نصيحة لزيادة الوزن.", 
                     image
